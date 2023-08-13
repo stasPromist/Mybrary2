@@ -2,7 +2,7 @@ const express = require('express')
 const router = express.Router()
 const Author = require('../models/author')
 const Book = require('../models/book')
-
+const { error } = require('console')
 //All Authors Route
 router.get('/', async (req, res) => {
     let searchOptions = {}
@@ -47,16 +47,16 @@ router.post('/', async (req, res) => {
 
 router.get('/:id', async (req, res) => {
     try {
-      const author = await Author.findById(req.params.id)
-      const books = await Book.find({ author: author.id }).limit(6).exec()
-      res.render('authors/show', {
-        author: author,
-        booksByAuthor: books
-      })
+        const author = await Author.findById(req.params.id)
+        const books = await Book.find({ author: author.id }).limit(6).exec()
+        res.render('authors/show', {
+            author: author,
+            booksByAuthor: books
+        })
     } catch {
-      res.redirect('/')
+        res.redirect('/')
     }
-  })
+})
 
 
 router.get('/:id/edit', async (req, res) => {
@@ -91,16 +91,26 @@ router.put('/:id', async (req, res) => {
     }
 })
 
-router.delete('/:id', async(req, res) => {
+router.delete('/:id', async (req, res) => {
     let author
+    let book
     try {
-          author = await Author.findById(req.params.id)
-        await author.remove()
-        res.redirect('/authors')
+        author = await Author.findById(req.params.id)
+        console.log(author.id)
+        book = await Book.find({ author: author })
+        console.log(book.length)
+        if (book.length > 0) {
+            res.redirect(`/authors/${author.id}`)
+        }
+        else {
+            await author.deleteOne()
+            res.redirect('/authors')
+        }
     } catch {
         if (author == null) {
             res.redirect('/')
         } else {
+            console.log(error)
             res.redirect(`/authors/${author.id}`)
         }
     }
